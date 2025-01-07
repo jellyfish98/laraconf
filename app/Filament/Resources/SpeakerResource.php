@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Enums\TalkStatus;
 use App\Filament\Resources\SpeakerResource\Pages;
+use App\Filament\Resources\SpeakerResource\RelationManagers\TalksRelationManager;
 use App\Models\Speaker;
 use Filament\Forms\Form;
 use Filament\Infolists\Components\Group;
@@ -40,7 +41,8 @@ class SpeakerResource extends Resource
                     }),
                 Tables\Columns\TextColumn::make('email')
                     ->searchable(),
-//                Tables\Columns\TextColumn::make('qualifications'),
+                Tables\Columns\TextColumn::make('qualifications')
+                    ->limit(40),
                 Tables\Columns\TextColumn::make('twitter_handle'),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
@@ -119,7 +121,7 @@ class SpeakerResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            TalksRelationManager::class,
         ];
     }
 

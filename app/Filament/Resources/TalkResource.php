@@ -38,9 +38,6 @@ class TalkResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('title')
                     ->sortable()
-                    ->description(function (Talk $record) {
-                        return Str::of($record->abstract)->limit(40);
-                    })
                     ->searchable(),
                 Tables\Columns\ImageColumn::make('speaker.avatar')
                     ->label('Speaker Avatar')

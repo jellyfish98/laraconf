@@ -3,21 +3,23 @@
 namespace App\Models;
 
 use App\Enums\Region;
-use Filament\Forms\Components\{Actions,
-    Actions\Action,
-    CheckboxList,
-    DateTimePicker,
-    Fieldset,
-    RichEditor,
-    Select,
-    Tabs,
-    TextInput,
-    Toggle
-};
+use Filament\Forms\Components\Actions;
+use Filament\Forms\Components\Actions\Action;
+use Filament\Forms\Components\Checkbox;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\Fieldset;
+use Filament\Forms\Components\MarkdownEditor;
+use Filament\Forms\Components\Section;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Forms\Get;
-use Filament\Forms\Set;
-use Filament\Resources\Components\Tab;
-use Illuminate\Database\Eloquent\{Builder, Factories\HasFactory, Model, Relations\BelongsTo, Relations\BelongsToMany};
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Conference extends Model
 {
@@ -27,8 +29,8 @@ class Conference extends Model
         'id' => 'integer',
         'start_date' => 'datetime',
         'end_date' => 'datetime',
-        'venue_id' => 'integer',
         'region' => Region::class,
+        'venue_id' => 'integer',
     ];
 
     public function venue(): BelongsTo
@@ -46,74 +48,74 @@ class Conference extends Model
         return $this->belongsToMany(Talk::class);
     }
 
+    public function attendees(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Attendee::class);
+    }
+
     public static function getForm(): array
     {
         return [
-            Tabs::make()
-                ->columnSpanFull()
-                ->tabs([
-                    Tabs\Tab::make('Conference Details')
+            Section::make('Conference Details')
+                ->collapsible()
+                ->description('Provide some basic information about the conference.')
+                ->icon('heroicon-o-information-circle')
+                ->columns(2)
+                ->schema([
+                    TextInput::make('name')
+                        ->columnSpanFull()
+                        ->label('Conference Name')
+                        ->default('My Conference')
+                        ->required()
+                        ->maxLength(60),
+                    MarkdownEditor::make('description')
+                        ->columnSpanFull()
+                        ->required(),
+                    DateTimePicker::make('start_date')
+                        ->native(false)
+                        ->required(),
+                    DateTimePicker::make('end_date')
+                        ->native(false)
+                        ->required(),
+                    Fieldset::make('Status')
+                        ->columns(1)
                         ->schema([
-                            TextInput::make('name')
-                                ->columnSpan(1)
-                                ->required()
-                                ->maxLength(255),
-                            Fieldset::make('Status Details')
-                                ->columnSpan(1)
-                                ->schema([
-                                    Select::make('status')
-                                        ->columnSpanFull()
-                                        ->options([
-                                            'draft' => 'Draft',
-                                            'published' => 'Published',
-                                            'archived' => 'Archived',
-                                        ])
-                                        ->required(),
-                                    Toggle::make('is_published')
-                                        ->default(false),
-                                ]),
-                            RichEditor::make('description')
-                                ->columnSpanFull()
+                            Select::make('status')
+                                ->options([
+                                    'draft' => 'Draft',
+                                    'published' => 'Published',
+                                    'archived' => 'Archived',
+                                ])
                                 ->required(),
-                            DateTimePicker::make('start_date')
-                                ->required(),
-                            DateTimePicker::make('end_date')
-                                ->required(),
-                            CheckboxList::make('speakers')
-                                ->relationship('speakers', 'name')
-                                ->options(fn() => Speaker::all()->pluck('name', 'id'))
-                                ->required(),
+                            Toggle::make('is_published')
+                                ->default(true),
                         ]),
-                    Tabs\Tab::make('Location Details')
-                        ->schema([
-                            Select::make('region')
-                                ->live()
-                                ->enum(Region::class)
-                                ->afterStateUpdated(function (Set $set) {
-                                    $set('venue_id', '');
-                                })
-                                ->options(Region::class)
-                                ->required(),
-                            Select::make('venue_id')
-                                ->searchable()
-                                ->preload()
-                                ->createOptionForm(Venue::getForm())
-                                ->editOptionForm(Venue::getForm())
-                                ->relationship('venue', 'name', modifyQueryUsing: function (Builder $query, Get $get) {
-                                    return $query->where('region', $get('region'));
-                                })
-                                ->required(),
-                        ]),
+                ]),
+            Section::make('Location')
+                ->columns(2)
+                ->schema([
+                    Select::make('region')
+                        ->live()
+                        ->enum(Region::class)
+                        ->options(Region::class),
+                    Select::make('venue_id')
+                        ->searchable()
+                        ->preload()
+                        ->createOptionForm(Venue::getForm())
+                        ->editOptionForm(Venue::getForm())
+                        ->relationship('venue', 'name', modifyQueryUsing: function (Builder $query, Get $get) {
+                            return $query->where('region', $get('region'));
+                        }),
                 ]),
             Actions::make([
                 Action::make('star')
-                    ->label('Fill with Factory date')
+                    ->label('Fill with Factory Data')
                     ->icon('heroicon-m-star')
                     ->visible(function (string $operation) {
-                        if ($operation !== 'create') {
+                        if($operation !== 'create') {
                             return false;
                         }
-                        if (!app()->environment('local')) {
+                        if(! app()->environment('local')) {
                             return false;
                         }
                         return true;

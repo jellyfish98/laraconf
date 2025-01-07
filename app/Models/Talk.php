@@ -43,7 +43,7 @@ class Talk extends Model
         $this->save();
     }
 
-    public static function getForm(): array
+    public static function getForm($speakerId = null): array
     {
         return [
             TextInput::make('title')
@@ -51,15 +51,18 @@ class Talk extends Model
                 ->maxLength(255),
             Fieldset::make('Toggles')
                 ->columnSpan(1)
-            ->schema([
-                Toggle::make('new_talk')
-                    ->label('Is this a new talk?')
-                    ->default(true),
-            ]),
-            Forms\Components\Textarea::make('abstract')
+                ->schema([
+                    Toggle::make('new_talk')
+                        ->label('Is this a new talk?')
+                        ->default(true),
+                ]),
+            Forms\Components\RichEditor::make('abstract')
                 ->required()
                 ->columnSpanFull(),
             Forms\Components\Select::make('speaker_id')
+                ->hidden(function () use ($speakerId) {
+                    return $speakerId !== null;
+                })
                 ->relationship('speaker', 'name')
                 ->required(),
         ];
