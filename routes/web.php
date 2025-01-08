@@ -7,5 +7,4 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-
 Route::get('/conference-sign-up', ConferenceSignUpPage::class)->name('conference-sign-up');
