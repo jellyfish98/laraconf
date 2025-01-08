@@ -7,6 +7,7 @@ use App\Filament\Resources\AttendeeResource\RelationManagers;
 use App\Filament\Resources\AttendeeResource\Widgets\AttendeeChartWidget;
 use App\Filament\Resources\AttendeeResource\Widgets\AttendeesStatsWidget;
 use App\Models\Attendee;
+use Awcodes\Shout\Components\Shout;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -19,12 +20,27 @@ class AttendeeResource extends Resource
 {
     protected static ?string $model = Attendee::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-user-group';
+
+    public static function getNavigationBadge(): ?string
+    {
+        return Attendee::count();
+    }
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
+                Shout::make('warn-price')
+                    ->visible(function (Forms\Get $get) {
+                        return $get('ticket_cost') > 15000;
+                    })
+                    ->columnSpanFull()
+                    ->type('warning')
+                    ->content(function (Forms\Get $get) {
+                        $price = $get('ticket_cost');
+                        return "The ticket cost is €" . number_format(trim($price) / 100, 2, ',', '.') . " which is higher than €150. Are you sure?";
+                    }),
                 Forms\Components\TextInput::make('name')
                     ->required()
                     ->maxLength(255),
@@ -33,7 +49,16 @@ class AttendeeResource extends Resource
                     ->required()
                     ->maxLength(255),
                 Forms\Components\TextInput::make('ticket_cost')
+                    ->live()
                     ->required()
+                    ->prefix('€')
+                    ->placeholder('Ticket cost is filled in in cents')
+                    ->hint(function (Forms\Get $get) {
+                        $price = $get('ticket_cost');
+                        return intval($price)
+                            ? "The ticket cost will be €" . number_format(trim($price) / 100, 2, ',', '.')
+                            : "The ticket cost will be €0.00";
+                    })
                     ->numeric(),
                 Forms\Components\Toggle::make('is_paid')
                     ->required(),

@@ -24,6 +24,8 @@ class TalkResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-user-circle';
 
+    protected static ?string $navigationGroup = 'Speakers and their talks';
+
     public static function form(Form $form): Form
     {
         return $form->schema(Talk::getForm());

@@ -22,6 +22,8 @@ class SpeakerResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-speaker-wave';
 
+    protected static ?string $navigationGroup = 'Speakers and their talks';
+
     public static function form(Form $form): Form
     {
         return $form->schema(Speaker::getForm());
